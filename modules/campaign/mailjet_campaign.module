@@ -133,7 +133,7 @@ function mailjet_campaign_save($campaign) {
  */
 function _mailjet_campaign_alter_callback() {
   watchdog('mailjet', json_encode($_POST));
-  watchdog('mailjet', print_r($_POST,true));
+
   $html = '';
   $mj = mailjet_new();
 
@@ -150,26 +150,24 @@ function _mailjet_campaign_alter_callback() {
     $response = (object) $_POST['response'];
   }
 
-  if($response->message == 'last change of campaigns parameters') {
+  if($response->message == 'html saved successfully') { //campaign saved successfully
 
     // Get the HTML for the email template.
-    $res = $mj->data('newsletter', $data->campaign_id, 'HTML', 'text/html', null, 'GET', 'LAST')->getResponse();
+    $html = $mj->data('newsletter', $data->campaign_id, 'HTML', 'text/html', null, 'GET', 'LAST')->getResponse();
 
     // Find the body for the email template.
-    $html = $res;
-    $get_body_part_html = strstr($html, '<!-- #nl_content -->');
-    $actuall_body_part = strstr($get_body_part_html, '</table>', TRUE);
+    $get_body_part_html = strstr($html, '<body>');
 
     // Get all links in the body.
-    $links = explode('<a', $actuall_body_part);
+    $links = explode('<a', $get_body_part_html);
     if (!empty($links)) {
-      foreach ($links as $key => $value) {
-        if ($key != 0) {
-          $link_beginning = explode('href="', $value);
-          $link = strstr($link_beginning[1], '"', TRUE);
-          $array_links[] = $link;
+        foreach ($links as $key => $value) {
+            if ($key != 0) {
+                $link_beginning = explode('href="', $value);
+                $link = strstr($link_beginning[1], '"', TRUE);
+                $array_links[] = $link;
+            }
         }
-      }
 
       // To avoid duplication use only the unique values.
       $array_links = array_unique($array_links);
@@ -183,7 +181,7 @@ function _mailjet_campaign_alter_callback() {
 
   }
 
-  if($response->message == 'send details saved successfully') {
+  if($response->message == 'campaign added successfully') { //campaign added successfully
     $user_infos = mailjet_user_infos();
     $url = 'http://api.mailjet.com/v3/REST/user/' . $user_infos['Email'];
     $result = $mj->generalRequest(FALSE, array(), 'GET', $url);
@@ -210,8 +208,6 @@ function _mailjet_campaign_alter_callback() {
     $mailjet_campaign->created = $created_date;
     mailjet_campaign_save($mailjet_campaign);
   }
-
-
 
   if ($data->campaign_id && strpos($data->next_step_url,"summary")!==false) {
 
