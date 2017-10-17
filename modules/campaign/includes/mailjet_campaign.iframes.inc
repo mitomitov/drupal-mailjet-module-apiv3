@@ -19,8 +19,6 @@ function mailjet_campaign_iframe() {
     $defaultLang = 'en';
     $locale = isset($langCodesMap[$language->language]) ? $langCodesMap[$language->language] : $langCodesMap[$defaultLang];
 
-    $callbackurl = urlencode($base_url . '?q=/admin/mailjet/campaign/alter_callback');
-
     $default_url = IFRAME_URL."campaigns?f=ams&r=commerceguys&t={$token}&show_menu=none&sp=display&locale={$locale}&cb=";
 
     $runningBJs = variable_get('runningBtachJobs', array());
@@ -32,9 +30,9 @@ function mailjet_campaign_iframe() {
       }
     }
     variable_get('runningBtachJobs', $still_running);
-    $callbackurl = urldecode($callbackurl);
     $default_url = urldecode($default_url);
-
+    $callbackurl = urlencode($base_url . '?q=/admin/mailjet/campaign/alter_callback');
+    // Triggers endpoint url: http://staging-public.mailjet.com/commerce_kickstart-7.x-2.48/mailjetevent
     return '<iframe src="' . $default_url . $callbackurl . '" width="100%" height="1080px" frameborder="0"></iframe>';
   }
   return t('Unable to generate campaign.');
